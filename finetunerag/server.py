@@ -13,5 +13,5 @@ def start_server():
 
 
 # uncomment the below to run the server directly to test the application
-# if __name__ == "__main__":
-#     start_server()
+if __name__ == "__main__":
+    start_server()

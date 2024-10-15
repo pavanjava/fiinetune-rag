@@ -60,6 +60,19 @@ select {
   animation: load 2s ease-in-out infinite;
 }
 
+.file-upload-wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .file-upload-wrapper {
+    flex-direction: column;
+  }
+}
+
 .file-upload {
   display: flex;
   flex-direction: row;
