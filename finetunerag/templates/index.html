@@ -1,28 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FineTuneRAG</title>
-</head>
-<body>
-<h1>Welcome to FineTuneRAG</h1>
-<form>
-    <label for="model-select">Select Model:</label>
-    <select id="model-select" name="model">
-        <option value="model1">Model 1</option>
-        <option value="model2">Model 2</option>
-        <option value="model3">Model 3</option>
-    </select>
-    <br><br>
-    <label>Select Options:</label><br>
-    <input type="checkbox" id="option1" name="option1" value="option1">
-    <label for="option1"> Option 1</label><br>
-    <input type="checkbox" id="option2" name="option2" value="option2">
-    <label for="option2"> Option 2</label><br>
-    <input type="checkbox" id="option3" name="option3" value="option3">
-    <label for="option3"> Option 3</label><br><br>
-    <button type="submit">Submit</button>
-</form>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css"
+    />
+    <link rel="stylesheet" href="index.css" />
+    <script
+      crossorigin
+      src="https://unpkg.com/react@17/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/babel-standalone@6.26.0/babel.js"
+    ></script>
+    <title>Welcome to FineTuneRAG</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      function App() {
+        const [file, setFile] = React.useState(null);
+        const [chunkSize, setChunkSize] = React.useState("");
+        const [chunkOverlap, setChunkOverlap] = React.useState("");
+        const [model, setModel] = React.useState("");
+        const [tprK, setTprK] = React.useState("");
+        const [runAll, setRunAll] = React.useState(false);
+        const [errors, setErrors] = React.useState({});
+        const [loading, setLoading] = React.useState(false);
+
+        const handleDropdownChange = (value, field) => {
+          if (value) {
+            setErrors((prevErrors) => {
+              const newErrors = { ...prevErrors };
+              delete newErrors[field]; // Remove the error for this field if it exists
+              return newErrors;
+            });
+          }
+          switch (field) {
+            case "chunkSize":
+              setChunkSize(value);
+              break;
+            case "chunkOverlap":
+              setChunkOverlap(value);
+              break;
+            case "model":
+              setModel(value);
+              break;
+            case "tprK":
+              setTprK(value);
+              break;
+            default:
+              break;
+          }
+        };
+        const clearCustomCombinations = () => {
+          setErrors({});
+        };
+        React.useEffect(() => {
+          if (runAll) {
+            clearCustomCombinations();
+          }
+        }, [runAll]); //
+        const validateForm = () => {
+          const newErrors = {};
+          if (!file) newErrors.file = "File is required";
+          if (!chunkSize) newErrors.chunkSize = "Chunk size is required";
+          if (!chunkOverlap)
+            newErrors.chunkOverlap = "Chunk overlap is required";
+          if (!model) newErrors.model = "Model is required";
+          if (!tprK) newErrors.tprK = "TPR K is required";
+          return newErrors;
+        };
+
+        const handleSubmit = (event) => {
+          event.preventDefault();
+          if (!runAll) {
+            const formErrors = validateForm();
+            if (Object.keys(formErrors).length > 0) {
+              setErrors(formErrors);
+              return;
+            }
+          }
+          setLoading(true);
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("chunkSize", chunkSize);
+          formData.append("chunkOverlap", chunkOverlap);
+          formData.append("model", model);
+          formData.append("tprK", tprK);
+          formData.append("runAll", runAll);
+
+          fetch("https://api.example.com/upload", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              setLoading(false);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              //   setLoading(false);
+            });
+        };
+
+        return (
+          <div className="container" role="main">
+            <img src="fineTune.jpeg"></img>
+            {loading && <div className="loader" aria-hidden="true"></div>}
+            <form onSubmit={handleSubmit}>
+              <div className="container">
+                <section className="file-upload">
+                  <h2>Dataset</h2>
+                  <input
+                    type="file"
+                    required
+                    aria-label="Dataset file upload"
+                    onChange={(e) => setFile(e.target.files[0])}
+                  />
+                  {errors.file && <p className="error">{errors.file}</p>}
+                </section>
+                <div className="column">
+                  <h2>Preference</h2>
+                  <section className="card-section">
+                    {/* Chunk Size */}
+                    <div className="card">
+                      <h3>Chunk size</h3>
+                      <select
+                        value={chunkSize}
+                        onChange={(e) =>
+                          handleDropdownChange(e.target.value, "chunkSize")
+                        }
+                        aria-label="Select chunk size"
+                      >
+                        <option value="">Select Size</option>
+                        <option value="256">256</option>
+                        <option value="512">512</option>
+                        <option value="1024">1024</option>
+                      </select>
+
+                      {errors.chunkSize && (
+                        <p className="error">{errors.chunkSize}</p>
+                      )}
+                    </div>
+                    {/* Chunk Overlap */}
+                    <div className="card">
+                      <h3>Chunk overlap</h3>
+                      <select
+                        value={chunkOverlap}
+                        onChange={(e) =>
+                          handleDropdownChange(e.target.value, "chunkOverlap")
+                        }
+                        aria-label="Select chunk overlap"
+                      >
+                        <option value="">Select Overlap</option>
+                        <option value="0.1">10%</option>
+                        <option value="0.2">20%</option>
+                        <option value="0.3">30%</option>
+                      </select>
+                      {errors.chunkOverlap && (
+                        <p className="error">{errors.chunkOverlap}</p>
+                      )}
+                    </div>
+                    {/* Model */}
+                    <div className="card">
+                      <h3>Embedding model</h3>
+                      <select
+                        value={model}
+                        onChange={(e) =>
+                          handleDropdownChange(e.target.value, "model")
+                        }
+                        aria-label="Select embedding model"
+                      >
+                        <option value="">Select Model</option>
+                        <option value="bert">BERT</option>
+                        <option value="gpt-3">GPT-3</option>
+                        <option value="roberta">RoBERTa</option>
+                      </select>
+                      {errors.model && <p className="error">{errors.model}</p>}
+                    </div>
+                    {/* TPR K */}
+                    <div className="card">
+                      <h3>TPR K</h3>
+                      <select
+                        value={tprK}
+                        onChange={(e) =>
+                          handleDropdownChange(e.target.value, "tprK")
+                        }
+                        aria-label="Select TPR K"
+                      >
+                        <option value="">Select K</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                      </select>
+                      {errors.tprK && <p className="error">{errors.tprK}</p>}
+                    </div>
+                  </section>
+                </div>
+                <section className="checkbox-section">
+                  <h2>Run all combinations</h2>
+                  <input
+                    type="checkbox"
+                    checked={runAll}
+                    onChange={(e) => setRunAll(e.target.checked)}
+                    aria-label="Run all combinations"
+                    className="checkbox"
+                  />
+                </section>
+                <button
+                  type="submit"
+                  className="button-primary"
+                  disabled={loading}
+                >
+                  {loading ? "Submitting..." : "Submit"}
+                </button>
+              </div>
+            </form>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+  </body>
 </html>
