@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{ url_for('static', filename='assets//favicon.ico') }}" type="image/x-icon" />
+    <link rel="icon" href="{{ url_for('static', filename='assets//favicon.ico') }}" type="image/x-icon" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css"
     />
-    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
     <script
       crossorigin
       src="https://unpkg.com/react@17/umd/react.development.js"
@@ -32,7 +32,7 @@
         const [chunkSize, setChunkSize] = React.useState("");
         const [chunkOverlap, setChunkOverlap] = React.useState("");
         const [model, setModel] = React.useState("");
-        const [tprK, setTprK] = React.useState("");
+        const [topK, setTopK] = React.useState("");
         const [runAll, setRunAll] = React.useState(false);
         const [errors, setErrors] = React.useState({});
         const [loading, setLoading] = React.useState(false);
@@ -56,7 +56,7 @@
               setModel(value);
               break;
             case "tprK":
-              setTprK(value);
+              setTopK(value);
               break;
             default:
               break;
@@ -77,7 +77,7 @@
           if (!chunkOverlap)
             newErrors.chunkOverlap = "Chunk overlap is required";
           if (!model) newErrors.model = "Model is required";
-          if (!tprK) newErrors.tprK = "TPR K is required";
+          if (!topK) newErrors.tprK = "TOP K is required";
           return newErrors;
         };
 
@@ -116,122 +116,134 @@
 
         return (
           <div className="container" role="main">
-            <img src="fineTune.jpeg"></img>
+            <img src="{{ url_for('static', filename='assets//finetune.jpeg') }}"></img>
             {loading && <div className="loader" aria-hidden="true"></div>}
             <form onSubmit={handleSubmit}>
               <div className="container">
-                <section className="file-upload">
-                  <h2>Dataset</h2>
-                  <input
-                    type="file"
-                    required
-                    aria-label="Dataset file upload"
-                    onChange={(e) => setFile(e.target.files[0])}
-                  />
-                  {errors.file && <p className="error">{errors.file}</p>}
-                </section>
-                <div className="column">
-                  <h2>Preference</h2>
-                  <section className="card-section">
-                    {/* Chunk Size */}
-                    <div className="card">
-                      <h3>Chunk size</h3>
-                      <select
-                        value={chunkSize}
-                        onChange={(e) =>
-                          handleDropdownChange(e.target.value, "chunkSize")
-                        }
-                        aria-label="Select chunk size"
-                      >
-                        <option value="">Select Size</option>
-                        <option value="256">256</option>
-                        <option value="512">512</option>
-                        <option value="1024">1024</option>
-                      </select>
-
-                      {errors.chunkSize && (
-                        <p className="error">{errors.chunkSize}</p>
-                      )}
-                    </div>
-                    {/* Chunk Overlap */}
-                    <div className="card">
-                      <h3>Chunk overlap</h3>
-                      <select
-                        value={chunkOverlap}
-                        onChange={(e) =>
-                          handleDropdownChange(e.target.value, "chunkOverlap")
-                        }
-                        aria-label="Select chunk overlap"
-                      >
-                        <option value="">Select Overlap</option>
-                        <option value="0.1">10%</option>
-                        <option value="0.2">20%</option>
-                        <option value="0.3">30%</option>
-                      </select>
-                      {errors.chunkOverlap && (
-                        <p className="error">{errors.chunkOverlap}</p>
-                      )}
-                    </div>
-                    {/* Model */}
-                    <div className="card">
-                      <h3>Embedding model</h3>
-                      <select
-                        value={model}
-                        onChange={(e) =>
-                          handleDropdownChange(e.target.value, "model")
-                        }
-                        aria-label="Select embedding model"
-                      >
-                        <option value="">Select Model</option>
-                        <option value="bert">BERT</option>
-                        <option value="gpt-3">GPT-3</option>
-                        <option value="roberta">RoBERTa</option>
-                      </select>
-                      {errors.model && <p className="error">{errors.model}</p>}
-                    </div>
-                    {/* TPR K */}
-                    <div className="card">
-                      <h3>TPR K</h3>
-                      <select
-                        value={tprK}
-                        onChange={(e) =>
-                          handleDropdownChange(e.target.value, "tprK")
-                        }
-                        aria-label="Select TPR K"
-                      >
-                        <option value="">Select K</option>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="15">15</option>
-                      </select>
-                      {errors.tprK && <p className="error">{errors.tprK}</p>}
-                    </div>
+                <div className="file-upload-wrapper">
+                  <section className="file-upload">
+                    <h2>Actual Data</h2>
+                    <input
+                            type="file"
+                            required
+                            aria-label="Dataset file upload"
+                            onChange={(e) => setFile(e.target.files[0])}
+                    />
+                    {errors.file && <p className="error">{errors.file}</p>}
+                  </section>
+                  <section className="file-upload">
+                    <h2>Gold Dataset</h2>
+                    <input
+                            type="file"
+                            required
+                            aria-label="Dataset file upload"
+                            onChange={(e) => setFile(e.target.files[0])}
+                    />
+                    {errors.file && <p className="error">{errors.file}</p>}
                   </section>
                 </div>
-                <section className="checkbox-section">
-                  <h2>Run all combinations</h2>
-                  <input
-                    type="checkbox"
-                    checked={runAll}
-                    onChange={(e) => setRunAll(e.target.checked)}
-                    aria-label="Run all combinations"
-                    className="checkbox"
-                  />
-                </section>
-                <button
-                  type="submit"
-                  className="button-primary"
-                  disabled={loading}
-                >
-                  {loading ? "Submitting..." : "Submit"}
-                </button>
-              </div>
+                  <div className="column">
+                    <h2>Preference</h2>
+                    <section className="card-section">
+                      {/* Chunk Size */}
+                      <div className="card">
+                        <h3>Chunk size</h3>
+                        <select
+                                value={chunkSize}
+                                onChange={(e) =>
+                                        handleDropdownChange(e.target.value, "chunkSize")
+                                }
+                                aria-label="Select chunk size"
+                        >
+                          <option value="">Select Size</option>
+                          <option value="256">256</option>
+                          <option value="512">512</option>
+                          <option value="1024">1024</option>
+                        </select>
+
+                        {errors.chunkSize && (
+                                <p className="error">{errors.chunkSize}</p>
+                        )}
+                      </div>
+                      {/* Chunk Overlap */}
+                      <div className="card">
+                        <h3>Chunk overlap</h3>
+                        <select
+                                value={chunkOverlap}
+                                onChange={(e) =>
+                                        handleDropdownChange(e.target.value, "chunkOverlap")
+                                }
+                                aria-label="Select chunk overlap"
+                        >
+                          <option value="">Select Overlap</option>
+                          <option value="0.1">10%</option>
+                          <option value="0.2">20%</option>
+                          <option value="0.3">30%</option>
+                        </select>
+                        {errors.chunkOverlap && (
+                                <p className="error">{errors.chunkOverlap}</p>
+                        )}
+                      </div>
+                      {/* Model */}
+                      <div className="card">
+                        <h3>Embedding model</h3>
+                        <select
+                                value={model}
+                                onChange={(e) =>
+                                        handleDropdownChange(e.target.value, "model")
+                                }
+                                aria-label="Select embedding model"
+                        >
+                          <option value="">Select Model</option>
+                          <option value="bert">BERT</option>
+                          <option value="gpt-3">GPT-3</option>
+                          <option value="roberta">RoBERTa</option>
+                        </select>
+                        {errors.model && <p className="error">{errors.model}</p>}
+                      </div>
+                      {/* TPR K */}
+                      <div className="card">
+                        <h3>TOP K</h3>
+                        <select
+                                value={topK}
+                                onChange={(e) =>
+                                        handleDropdownChange(e.target.value, "topK")
+                                }
+                                aria-label="Select TOP K"
+                        >
+                          <option value="">Select TOP-K</option>
+                          <option value="5">5</option>
+                          <option value="10">10</option>
+                          <option value="15">15</option>
+                        </select>
+                        {errors.topK && <p className="error">{errors.topK}</p>}
+                      </div>
+                    </section>
+                  </div>
+                  <section className="checkbox-section">
+                    <h2>Run all combinations</h2>
+                    <input
+                            type="checkbox"
+                            checked={runAll}
+                            onChange={(e) => setRunAll(e.target.checked)}
+                            aria-label="Run all combinations"
+                            className="checkbox"
+                    />
+                  </section>
+                  <button
+                          type="submit"
+                          className="button-primary"
+                          disabled={loading}
+                  >
+                    {loading ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
             </form>
           </div>
         );
       }
 
-      ReactDOM.render(<App />, document.getElementById("root"));
+      ReactDOM.render(<App/>, document.getElementById("root"));
     </script>
   </body>
 </html>
